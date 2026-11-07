@@ -1,6 +1,0 @@
-{
-  "rewrites": [
-    { "source": "/api/:p*", "destination": "/api/index?p=:p*" },
-    { "source": "/healthz", "destination": "/api/index?p=healthz" }
-  ]
-}
