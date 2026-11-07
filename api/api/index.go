@@ -43,5 +43,15 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "database unavailable", http.StatusServiceUnavailable)
 		return
 	}
+	// vercel.json rewrites every route to this function and keeps the original path in ?p=
+	q := r.URL.Query()
+	p := q.Get("p")
+	q.Del("p")
+	r.URL.RawQuery = q.Encode()
+	if p == "healthz" {
+		r.URL.Path = "/healthz"
+	} else {
+		r.URL.Path = "/api/" + p
+	}
 	router.ServeHTTP(w, r)
 }
