@@ -1,0 +1,58 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: f1
+      POSTGRES_PASSWORD: f1
+      POSTGRES_DB: f1
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U f1 -d f1"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build: ./api
+    environment:
+      DATABASE_URL: postgres://f1:f1@db:5432/f1?sslmode=disable
+      PORT: "8080"
+      CORS_ORIGIN: http://localhost:3000
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./web
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8080
+    environment:
+      API_URL: http://api:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+  # docker compose --profile ingest run --rm ingest --year 2024 --round 5
+  ingest:
+    profiles: ["ingest"]
+    build:
+      context: .
+      dockerfile: ingest/Dockerfile
+    environment:
+      DATABASE_URL: postgres://f1:f1@db:5432/f1
+      INGEST_CACHE: /cache
+    volumes:
+      - ingestcache:/cache
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  ingestcache:
