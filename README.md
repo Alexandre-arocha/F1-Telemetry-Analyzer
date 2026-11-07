@@ -2,7 +2,7 @@
 
 Ingere a telemetria de **todas as voltas de uma corrida de Fórmula 1**, compara duas voltas lado a lado por distância percorrida e gera um relatório automático com os **3 maiores pontos de ganho de tempo** (qual curva, quanto tempo e por quê).
 
-**Demo online:** DEMO_URL
+**Demo online:** https://f1-telemetry-web.vercel.app (GP do Bahrein 2024; API em https://f1-telemetry-api-alexandre-arochas-projects.vercel.app)
 
 ![Comparação de duas voltas](docs/compare.png)
 ![Relatório de ganhos](docs/report.png)
