@@ -1,13 +1,14 @@
 -- name: ListRaces :many
 SELECT id, year, round, name, circuit, country, event_date, total_laps
-FROM races ORDER BY year DESC, round DESC;
+FROM races ORDER BY year DESC, round ASC;
 
 -- name: GetRace :one
 SELECT id, year, round, name, circuit, country, event_date, total_laps
 FROM races WHERE id = $1;
 
 -- name: ListDrivers :many
-SELECT id, code, number, full_name, team FROM drivers WHERE race_id = $1 ORDER BY code;
+SELECT id, code, number, full_name, team, team_colour, headshot_url
+FROM drivers WHERE race_id = $1 ORDER BY code;
 
 -- name: ListLaps :many
 SELECT l.id, d.code AS driver_code, l.lap_number, l.lap_time_ms, l.s1_ms, l.s2_ms, l.s3_ms,
@@ -17,7 +18,8 @@ WHERE l.race_id = $1
 ORDER BY d.code, l.lap_number;
 
 -- name: GetLap :one
-SELECT l.id, l.race_id, d.code AS driver_code, l.lap_number, l.lap_time_ms, l.has_telemetry
+SELECT l.id, l.race_id, d.code AS driver_code, d.full_name, d.team, d.team_colour, d.headshot_url,
+       l.lap_number, l.lap_time_ms, l.has_telemetry
 FROM laps l JOIN drivers d ON d.id = l.driver_id
 WHERE l.id = $1;
 

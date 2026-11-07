@@ -16,11 +16,13 @@ export type ChartLine = { key: string; name: string; color: string; step?: boole
 
 export function TraceChart({
   title,
+  hint,
   data,
   lines,
   zeroLine,
 }: {
   title: string;
+  hint?: string;
   data: Record<string, number>[];
   lines: ChartLine[];
   zeroLine?: boolean;
@@ -29,6 +31,7 @@ export function TraceChart({
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
       </CardHeader>
       <CardContent className="h-52">
         <ResponsiveContainer width="100%" height="100%">

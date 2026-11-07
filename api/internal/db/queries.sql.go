@@ -12,7 +12,8 @@ import (
 )
 
 const getLap = `-- name: GetLap :one
-SELECT l.id, l.race_id, d.code AS driver_code, l.lap_number, l.lap_time_ms, l.has_telemetry
+SELECT l.id, l.race_id, d.code AS driver_code, d.full_name, d.team, d.team_colour, d.headshot_url,
+       l.lap_number, l.lap_time_ms, l.has_telemetry
 FROM laps l JOIN drivers d ON d.id = l.driver_id
 WHERE l.id = $1
 `
@@ -21,6 +22,10 @@ type GetLapRow struct {
 	ID           int32       `json:"id"`
 	RaceID       int32       `json:"race_id"`
 	DriverCode   string      `json:"driver_code"`
+	FullName     string      `json:"full_name"`
+	Team         string      `json:"team"`
+	TeamColour   string      `json:"team_colour"`
+	HeadshotUrl  string      `json:"headshot_url"`
 	LapNumber    int16       `json:"lap_number"`
 	LapTimeMs    pgtype.Int4 `json:"lap_time_ms"`
 	HasTelemetry bool        `json:"has_telemetry"`
@@ -33,6 +38,10 @@ func (q *Queries) GetLap(ctx context.Context, id int32) (GetLapRow, error) {
 		&i.ID,
 		&i.RaceID,
 		&i.DriverCode,
+		&i.FullName,
+		&i.Team,
+		&i.TeamColour,
+		&i.HeadshotUrl,
 		&i.LapNumber,
 		&i.LapTimeMs,
 		&i.HasTelemetry,
@@ -85,15 +94,18 @@ func (q *Queries) GetTelemetry(ctx context.Context, lapID int32) (Telemetry, err
 }
 
 const listDrivers = `-- name: ListDrivers :many
-SELECT id, code, number, full_name, team FROM drivers WHERE race_id = $1 ORDER BY code
+SELECT id, code, number, full_name, team, team_colour, headshot_url
+FROM drivers WHERE race_id = $1 ORDER BY code
 `
 
 type ListDriversRow struct {
-	ID       int32  `json:"id"`
-	Code     string `json:"code"`
-	Number   string `json:"number"`
-	FullName string `json:"full_name"`
-	Team     string `json:"team"`
+	ID          int32  `json:"id"`
+	Code        string `json:"code"`
+	Number      string `json:"number"`
+	FullName    string `json:"full_name"`
+	Team        string `json:"team"`
+	TeamColour  string `json:"team_colour"`
+	HeadshotUrl string `json:"headshot_url"`
 }
 
 func (q *Queries) ListDrivers(ctx context.Context, raceID int32) ([]ListDriversRow, error) {
@@ -111,6 +123,8 @@ func (q *Queries) ListDrivers(ctx context.Context, raceID int32) ([]ListDriversR
 			&i.Number,
 			&i.FullName,
 			&i.Team,
+			&i.TeamColour,
+			&i.HeadshotUrl,
 		); err != nil {
 			return nil, err
 		}
@@ -182,7 +196,7 @@ func (q *Queries) ListLaps(ctx context.Context, raceID int32) ([]ListLapsRow, er
 
 const listRaces = `-- name: ListRaces :many
 SELECT id, year, round, name, circuit, country, event_date, total_laps
-FROM races ORDER BY year DESC, round DESC
+FROM races ORDER BY year DESC, round ASC
 `
 
 func (q *Queries) ListRaces(ctx context.Context) ([]Race, error) {

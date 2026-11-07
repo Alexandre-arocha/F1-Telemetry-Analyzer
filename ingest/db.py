@@ -4,8 +4,8 @@ from .models import RaceRec
 
 _TELEMETRY_SQL = """
 INSERT INTO telemetry (lap_id, step_m, time_s, speed, rpm, gear, throttle, brake, x, y)
-VALUES (%s, %s, %s::real[], %s::real[], %s::real[], %s::smallint[], %s::real[],
-        %s::smallint[], %s::real[], %s::real[])
+VALUES (%s, %s, %s::real[], %s::real[], %s::smallint[], %s::smallint[], %s::smallint[],
+        %s::smallint[], %s::smallint[], %s::smallint[])
 """
 
 
@@ -21,9 +21,9 @@ def save_race(database_url: str, race: RaceRec) -> None:
         race_id = cur.fetchone()[0]
         for d in race.drivers:
             cur.execute(
-                "INSERT INTO drivers (race_id, code, number, full_name, team) "
-                "VALUES (%s, %s, %s, %s, %s) RETURNING id",
-                (race_id, d.code, d.number, d.full_name, d.team),
+                "INSERT INTO drivers (race_id, code, number, full_name, team, team_colour, headshot_url) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id",
+                (race_id, d.code, d.number, d.full_name, d.team, d.team_colour, d.headshot_url),
             )
             driver_id = cur.fetchone()[0]
             for lap in d.laps:

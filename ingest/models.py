@@ -22,6 +22,8 @@ class DriverRec:
     number: str
     full_name: str
     team: str
+    team_colour: str = ""
+    headshot_url: str = ""
     laps: list[LapRec] = field(default_factory=list)
 
 

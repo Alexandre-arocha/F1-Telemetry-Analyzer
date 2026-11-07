@@ -75,6 +75,16 @@ export function CompareView({
 
   return (
     <section className="space-y-4">
+      <details open className="rounded-lg border bg-card p-3 text-sm text-muted-foreground">
+        <summary className="cursor-pointer font-medium text-foreground">Como usar</summary>
+        <ol className="mt-2 list-decimal space-y-1 pl-5">
+          <li>Escolha a volta <b style={{ color: COLOR_A }}>A</b> (a referência) e a volta <b style={{ color: COLOR_B }}>B</b> (a que você quer melhorar).</li>
+          <li>Os gráficos mostram as duas voltas ao longo da pista, do começo (0 m) ao fim da volta.</li>
+          <li>No gráfico de diferença, quando a linha sobe, B está perdendo tempo para A naquele trecho.</li>
+          <li>Clique em &ldquo;Ver relatório de ganhos&rdquo; para ver as 3 curvas com maior ganho de tempo.</li>
+        </ol>
+      </details>
+
       <div className="space-y-2">
         <LapPicker label="A · referência" color={COLOR_A} drivers={drivers} laps={laps} lapId={a} onChange={setA} />
         <LapPicker label="B · a melhorar" color={COLOR_B} drivers={drivers} laps={laps} lapId={b} onChange={setB} />
@@ -101,11 +111,11 @@ export function CompareView({
       {!rows && !error && <p className="text-muted-foreground">Carregando telemetria…</p>}
       {rows && (
         <div className="grid gap-4 lg:grid-cols-2">
-          <TraceChart title="Velocidade (km/h)" data={rows} lines={pair("s")} />
-          <TraceChart title="Delta acumulado (s) · positivo = B atrás" data={rows} lines={[{ key: "delta", name: "B − A", color: "#a78bfa" }]} zeroLine />
-          <TraceChart title="Freio (0/1)" data={rows} lines={pair("b", true)} />
-          <TraceChart title="Acelerador (%)" data={rows} lines={pair("t")} />
-          <TraceChart title="Marcha" data={rows} lines={pair("g", true)} />
+          <TraceChart title="Velocidade (km/h)" hint="Quanto mais alta a linha, mais rápido o carro. Os vales são as curvas." data={rows} lines={pair("s")} />
+          <TraceChart title="Diferença de tempo (s)" hint="Acima de zero: B está atrás de A. Quando a linha sobe, B perde tempo." data={rows} lines={[{ key: "delta", name: "B − A", color: "#a78bfa" }]} zeroLine />
+          <TraceChart title="Freio" hint="1 = piloto freando, 0 = sem freio. Mostra onde cada um começa a frear." data={rows} lines={pair("b", true)} />
+          <TraceChart title="Acelerador (%)" hint="100 = pé no fundo. Mostra onde cada um volta a acelerar." data={rows} lines={pair("t")} />
+          <TraceChart title="Marcha" hint="Marcha engatada ao longo da volta." data={rows} lines={pair("g", true)} />
         </div>
       )}
     </section>

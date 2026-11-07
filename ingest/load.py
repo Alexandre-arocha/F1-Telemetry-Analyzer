@@ -70,7 +70,8 @@ def load_race(year: int, round_: int, cache_dir: str) -> RaceRec:
     for d in sorted(api.get("drivers", session_key=key), key=lambda d: d["name_acronym"]):
         n = d["driver_number"]
         driver = DriverRec(
-            code=d["name_acronym"], number=str(n), full_name=d["full_name"].title(), team=d["team_name"] or ""
+            code=d["name_acronym"], number=str(n), full_name=d["full_name"].title(), team=d["team_name"] or "",
+            team_colour=d.get("team_colour") or "", headshot_url=d.get("headshot_url") or "",
         )
         dlaps = sorted((l for l in laps if l["driver_number"] == n), key=lambda l: l["lap_number"])
         if not dlaps:

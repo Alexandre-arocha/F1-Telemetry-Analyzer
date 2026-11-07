@@ -9,12 +9,14 @@ import (
 )
 
 type Driver struct {
-	ID       int32  `json:"id"`
-	RaceID   int32  `json:"race_id"`
-	Code     string `json:"code"`
-	Number   string `json:"number"`
-	FullName string `json:"full_name"`
-	Team     string `json:"team"`
+	ID          int32  `json:"id"`
+	RaceID      int32  `json:"race_id"`
+	Code        string `json:"code"`
+	Number      string `json:"number"`
+	FullName    string `json:"full_name"`
+	Team        string `json:"team"`
+	HeadshotUrl string `json:"headshot_url"`
+	TeamColour  string `json:"team_colour"`
 }
 
 type Lap struct {
@@ -50,10 +52,10 @@ type Telemetry struct {
 	StepM    float32   `json:"step_m"`
 	TimeS    []float32 `json:"time_s"`
 	Speed    []float32 `json:"speed"`
-	Rpm      []float32 `json:"rpm"`
+	Rpm      []int16   `json:"rpm"`
 	Gear     []int16   `json:"gear"`
-	Throttle []float32 `json:"throttle"`
+	Throttle []int16   `json:"throttle"`
 	Brake    []int16   `json:"brake"`
-	X        []float32 `json:"x"`
-	Y        []float32 `json:"y"`
+	X        []int16   `json:"x"`
+	Y        []int16   `json:"y"`
 }

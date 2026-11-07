@@ -1,3 +1,4 @@
+import { DriverAvatar } from "@/components/driver-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { Driver, Stint } from "@/lib/api";
@@ -19,7 +20,12 @@ export function DriverTable({ drivers }: { drivers: Driver[] }) {
       <TableBody>
         {rows.map((d) => (
           <TableRow key={d.code}>
-            <TableCell className="font-medium">{d.code}</TableCell>
+            <TableCell>
+              <span className="flex items-center gap-2 font-medium">
+                <DriverAvatar src={d.headshot_url} name={d.name} colour={d.team_colour} size={32} />
+                {d.name}
+              </span>
+            </TableCell>
             <TableCell>{d.team}</TableCell>
             <TableCell className="text-right tabular-nums">{fmtLap(d.best_lap_ms)}</TableCell>
             <TableCell className="text-right tabular-nums">

@@ -2,7 +2,8 @@ import Link from "next/link";
 import { ReasonBadge } from "@/components/reason-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api, type Report } from "@/lib/api";
-import { fmtGap, fmtLap } from "@/lib/format";
+import { DriverAvatar } from "@/components/driver-avatar";
+import { fmtGap, fmtLap, TIPS } from "@/lib/format";
 
 export default async function ReportPage({
   params,
@@ -23,10 +24,28 @@ export default async function ReportPage({
           ← comparação
         </Link>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">Onde ganhar tempo</h1>
-        <p className="text-sm text-muted-foreground">
-          {report.b.driver} volta {report.b.lap} ({fmtLap(report.b.lap_time_ms)}) contra a referência{" "}
-          {report.a.driver} volta {report.a.lap} ({fmtLap(report.a.lap_time_ms)}) · diferença{" "}
-          {fmtGap(report.total_delta_s)}
+        <div className="mt-3 flex flex-wrap items-center gap-6">
+          {[
+            { l: report.b, role: "Volta a melhorar" },
+            { l: report.a, role: "Referência" },
+          ].map(({ l, role }) => (
+            <div key={role} className="flex items-center gap-3">
+              <DriverAvatar src={l.headshot_url} name={l.name} colour={l.team_colour} size={52} />
+              <div className="text-sm leading-tight">
+                <p className="text-muted-foreground">{role}</p>
+                <p className="font-medium">
+                  {l.name} · {l.team}
+                </p>
+                <p className="tabular-nums text-muted-foreground">
+                  volta {l.lap} · {fmtLap(l.lap_time_ms)}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-sm text-muted-foreground">
+          {report.b.driver} termina {fmtGap(report.total_delta_s)} de {report.a.driver}. Abaixo estão as 3 curvas onde
+          {" "}{report.b.driver} mais perde tempo, ou seja, onde mais poderia ganhar.
         </p>
       </div>
 
@@ -50,6 +69,7 @@ export default async function ReportPage({
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
                   <p>{g.summary}</p>
+                  <p className="text-muted-foreground">{TIPS[g.reason]}</p>
                   <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-muted-foreground">
                     <dt>Trecho</dt>
                     <dd className="tabular-nums text-foreground">

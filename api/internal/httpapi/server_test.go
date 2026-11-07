@@ -56,7 +56,7 @@ func (fakeQ) GetTelemetry(_ context.Context, id int32) (db.Telemetry, error) {
 		t.Gear = append(t.Gear, 8)
 		t.Throttle = append(t.Throttle, 100)
 		t.Brake = append(t.Brake, 0)
-		t.X = append(t.X, float32(i))
+		t.X = append(t.X, int16(i))
 		t.Y = append(t.Y, 0)
 	}
 	return t, nil

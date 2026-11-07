@@ -1,7 +1,7 @@
 """Pure helpers: build one lap from raw samples, put it on a fixed distance grid, flag clean laps."""
 import numpy as np
 
-STEP_M = 5.0
+STEP_M = 10.0  # the source samples at ~3.7 Hz (15-20 m apart), so a finer grid adds no information
 MIN_LAP_M = 1000.0
 MIN_SAMPLES = 20
 CLEAN_LIMIT = 1.07  # a clean lap is within 107% of the driver's median lap
@@ -59,12 +59,12 @@ def resample_lap(distance, time_s, channels, step=STEP_M):
         "step_m": float(step),
         "time_s": np.round(np.interp(grid, d, t) - t[0], 3).tolist(),
         "speed": np.round(at(channels["speed"]), 1).tolist(),
-        "rpm": np.round(at(channels["rpm"])).tolist(),
+        "rpm": np.rint(at(channels["rpm"])).astype(int).tolist(),
         "gear": np.rint(at(channels["gear"])).astype(int).tolist(),
-        "throttle": np.round(at(channels["throttle"])).tolist(),
+        "throttle": np.rint(at(channels["throttle"])).astype(int).tolist(),
         "brake": (at(channels["brake"]) > 0.5).astype(int).tolist(),
-        "x": np.round(at(channels["x"])).tolist(),
-        "y": np.round(at(channels["y"])).tolist(),
+        "x": np.rint(at(channels["x"])).astype(int).tolist(),
+        "y": np.rint(at(channels["y"])).astype(int).tolist(),
     }
 
 

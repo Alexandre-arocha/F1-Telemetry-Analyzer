@@ -33,7 +33,7 @@ def test_resample_survives_duplicate_and_backwards_distance():
     d[10] = d[9]  # duplicate
     d[20] = d[19] - 1  # glitch going backwards
     out = resample_lap(d, t, ch)
-    assert len(out["time_s"]) > 800
+    assert len(out["time_s"]) > 400  # ~4500 m on the default 10 m grid
 
 
 def test_resample_replaces_nan_so_json_stays_valid():

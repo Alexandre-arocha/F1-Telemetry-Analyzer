@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CompareView } from "@/components/compare-view";
 import { DriverTable, StintTable } from "@/components/stats-tables";
+import { TeamsStrip } from "@/components/teams-strip";
 import { api, type Driver, type Lap, type Race, type Stint } from "@/lib/api";
 
 export default async function RacePage({ params }: { params: Promise<{ id: string }> }) {
@@ -32,6 +33,12 @@ export default async function RacePage({ params }: { params: Promise<{ id: strin
       <section className="space-y-3">
         <h2 className="text-lg font-medium">Comparar duas voltas</h2>
         <CompareView raceId={race.id} drivers={drivers} laps={laps.filter((l) => l.has_telemetry && l.lap_time_ms)} />
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-lg font-medium">Equipes e pilotos</h2>
+        <p className="text-sm text-muted-foreground">Melhor volta de cada piloto na corrida, da equipe mais rápida para a mais lenta.</p>
+        <TeamsStrip drivers={drivers} />
       </section>
 
       <section className="space-y-3">

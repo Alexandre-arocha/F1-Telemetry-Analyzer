@@ -162,6 +162,8 @@ type driverDTO struct {
 	Number       string   `json:"number"`
 	Name         string   `json:"name"`
 	Team         string   `json:"team"`
+	TeamColour   string   `json:"team_colour"` // hex without '#'
+	Headshot     string   `json:"headshot_url"`
 	Laps         int      `json:"laps"`
 	CleanLaps    int      `json:"clean_laps"`
 	BestLapID    *int32   `json:"best_lap_id"` // fastest lap that has telemetry
@@ -191,7 +193,8 @@ func (s *Server) listDrivers(c *gin.Context) {
 
 	out := make([]driverDTO, len(drivers))
 	for i, d := range drivers {
-		dto := driverDTO{Code: d.Code, Number: d.Number, Name: d.FullName, Team: d.Team}
+		dto := driverDTO{Code: d.Code, Number: d.Number, Name: d.FullName, Team: d.Team,
+			TeamColour: d.TeamColour, Headshot: d.HeadshotUrl}
 		var clean []float64
 		for _, l := range byDriver[d.Code] {
 			dto.Laps++
@@ -282,19 +285,23 @@ func (s *Server) degradation(c *gin.Context) {
 // ---- compare and report ----
 
 type lapInfo struct {
-	ID        int32  `json:"id"`
-	Driver    string `json:"driver"`
-	Lap       int16  `json:"lap"`
-	LapTimeMs *int   `json:"lap_time_ms"`
+	ID         int32  `json:"id"`
+	Driver     string `json:"driver"`
+	Name       string `json:"name"`
+	Team       string `json:"team"`
+	TeamColour string `json:"team_colour"`
+	Headshot   string `json:"headshot_url"`
+	Lap        int16  `json:"lap"`
+	LapTimeMs  *int   `json:"lap_time_ms"`
 }
 
 type lapSeries struct {
 	lapInfo
 	Speed    []float32 `json:"speed"`
-	Throttle []float32 `json:"throttle"`
+	Throttle []int16   `json:"throttle"`
 	Brake    []int16   `json:"brake"`
 	Gear     []int16   `json:"gear"`
-	RPM      []float32 `json:"rpm"`
+	RPM      []int16   `json:"rpm"`
 }
 
 type compareResp struct {
@@ -304,8 +311,8 @@ type compareResp struct {
 	B        lapSeries `json:"b"`
 	Delta    []float64 `json:"delta"` // seconds, B minus A, accumulated along the lap
 	Track    struct {
-		X []float32 `json:"x"`
-		Y []float32 `json:"y"`
+		X []int16 `json:"x"`
+		Y []int16 `json:"y"`
 	} `json:"track"`
 }
 
@@ -360,7 +367,9 @@ func (s *Server) loadPair(c *gin.Context) (a, b loadedLap, ok bool) {
 }
 
 func info(l loadedLap) lapInfo {
-	return lapInfo{ID: l.info.ID, Driver: l.info.DriverCode, Lap: l.info.LapNumber, LapTimeMs: int4(l.info.LapTimeMs)}
+	i := l.info
+	return lapInfo{ID: i.ID, Driver: i.DriverCode, Name: i.FullName, Team: i.Team, TeamColour: i.TeamColour,
+		Headshot: i.HeadshotUrl, Lap: i.LapNumber, LapTimeMs: int4(i.LapTimeMs)}
 }
 
 func (s *Server) compare(c *gin.Context) {

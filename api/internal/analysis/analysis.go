@@ -16,7 +16,7 @@ const (
 	throttleOnPct    = 90.0 // "on the power" again
 	minBrakeZoneM    = 20.0
 	brakeMergeGapM   = 15.0
-	smoothSamples    = 5
+	smoothWindowM    = 25.0 // moving-average window for the speed trace
 
 	// OpenF1 samples at ~3.7 Hz (a car covers 15-20 m between samples), so smaller gaps are noise.
 	minBrakeDiffM    = 20.0
@@ -101,7 +101,7 @@ func Corners(t Trace) []Corner {
 	if n < 3 || t.StepM <= 0 {
 		return nil
 	}
-	sm := smooth(t.Speed, smoothSamples)
+	sm := smooth(t.Speed, max(3, int(math.Round(smoothWindowM/t.StepM))))
 	minGap := int(minCornerGapM / t.StepM)
 
 	var apexes []int

@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DriverAvatar } from "@/components/driver-avatar";
 import type { Driver, Lap } from "@/lib/api";
 import { fmtLap } from "@/lib/format";
 
@@ -27,9 +28,11 @@ export function LapPicker({
 }) {
   const driver = laps.find((l) => l.id === lapId)?.driver ?? "";
   const driverLaps = laps.filter((l) => l.driver === driver);
+  const current = drivers.find((d) => d.code === driver);
 
   return (
     <div className="flex flex-wrap items-center gap-2">
+      <DriverAvatar src={current?.headshot_url} name={current?.name ?? "?"} colour={current?.team_colour} size={40} />
       <span className="w-32 text-sm font-medium" style={{ color }}>
         {label}
       </span>
@@ -48,7 +51,7 @@ export function LapPicker({
             .filter((d) => d.best_lap_id)
             .map((d) => (
               <SelectItem key={d.code} value={d.code}>
-                {d.code} · {d.team}
+                {d.name} ({d.code})
               </SelectItem>
             ))}
         </SelectContent>

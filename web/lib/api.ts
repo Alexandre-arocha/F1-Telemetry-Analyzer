@@ -25,6 +25,8 @@ export type Driver = {
   number: string;
   name: string;
   team: string;
+  team_colour: string; // hex without '#'
+  headshot_url: string;
   laps: number;
   clean_laps: number;
   best_lap_id: number | null;
@@ -54,7 +56,16 @@ export type Stint = {
   points: { tyre_life: number; lap_time_s: number }[];
 };
 
-export type LapInfo = { id: number; driver: string; lap: number; lap_time_ms: number | null };
+export type LapInfo = {
+  id: number;
+  driver: string;
+  name: string;
+  team: string;
+  team_colour: string;
+  headshot_url: string;
+  lap: number;
+  lap_time_ms: number | null;
+};
 
 export type LapSeries = LapInfo & {
   speed: number[];
