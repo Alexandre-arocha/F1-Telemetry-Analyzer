@@ -1,6 +1,7 @@
 """Download a race from OpenF1 and turn it into RaceRec/DriverRec/LapRec."""
 import bisect
 import statistics
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 
 import numpy as np
@@ -39,6 +40,27 @@ def _samples(api, endpoint, key, number, start, end, fields):
     return out
 
 
+def _prefetch(api, key, drivers, start, end):
+    """Download every car_data/location chunk in parallel; _samples then reads them from the cache.
+
+    Each request takes about a second to answer, so one at a time the 3 req/s limit is never reached.
+    """
+    jobs = []
+    for d in drivers:
+        cur = start
+        while cur < end:
+            nxt = min(cur + CHUNK, end)
+            jobs += [(ep, d["driver_number"], cur, nxt) for ep in ("car_data", "location")]
+            cur = nxt
+
+    def fetch(job):
+        endpoint, number, a, b = job
+        api.get(endpoint, session_key=key, driver_number=number, **{"date>": _iso(a), "date<": _iso(b)})
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        list(pool.map(fetch, jobs))
+
+
 def load_race(year: int, round_: int, cache_dir: str) -> RaceRec:
     api = OpenF1(cache_dir)
     sessions = sorted(api.get("sessions", year=year, session_name="Race"), key=lambda s: s["date_start"])
@@ -67,7 +89,9 @@ def load_race(year: int, round_: int, cache_dir: str) -> RaceRec:
     )
 
     raw = {}  # (driver code, lap number) -> series, rescaled once the track length is known
-    for d in sorted(api.get("drivers", session_key=key), key=lambda d: d["name_acronym"]):
+    drivers = sorted(api.get("drivers", session_key=key), key=lambda d: d["name_acronym"])
+    _prefetch(api, key, drivers, start, end)
+    for d in drivers:
         n = d["driver_number"]
         driver = DriverRec(
             code=d["name_acronym"], number=str(n), full_name=d["full_name"].title(), team=d["team_name"] or "",

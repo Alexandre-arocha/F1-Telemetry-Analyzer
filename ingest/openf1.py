@@ -2,13 +2,14 @@
 import hashlib
 import json
 import os
+import threading
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 
 BASE = "https://api.openf1.org/v1"
-MIN_INTERVAL_S = 0.4  # the API allows 3 requests per second
+MIN_INTERVAL_S = 0.36  # the API allows 3 requests per second
 
 
 class OpenF1:
@@ -16,6 +17,7 @@ class OpenF1:
         self.cache_dir = cache_dir
         os.makedirs(cache_dir, exist_ok=True)
         self._last = 0.0
+        self._lock = threading.Lock()  # get() is called from a thread pool; keeps the 3 req/s limit global
 
     def get(self, endpoint: str, **params) -> list[dict]:
         # keys may carry an operator, e.g. {"date>=": "..."}; only the values are url-encoded
@@ -32,10 +34,11 @@ class OpenF1:
 
     def _fetch(self, url: str) -> list[dict]:
         for attempt in range(6):
-            wait = MIN_INTERVAL_S - (time.monotonic() - self._last)
-            if wait > 0:
-                time.sleep(wait)
-            self._last = time.monotonic()
+            with self._lock:
+                wait = MIN_INTERVAL_S - (time.monotonic() - self._last)
+                if wait > 0:
+                    time.sleep(wait)
+                self._last = time.monotonic()
             try:
                 with urllib.request.urlopen(url, timeout=60) as resp:
                     return json.load(resp)
