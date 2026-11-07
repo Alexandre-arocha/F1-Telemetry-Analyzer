@@ -26,8 +26,11 @@ func main() {
 	if dsn == "" {
 		log.Fatal("DATABASE_URL is required")
 	}
-	if err := migrateUp(dsn); err != nil {
-		log.Fatalf("migrations: %v", err)
+	// SKIP_MIGRATIONS=1 for serverless hosts, where many cold starts would race to migrate
+	if os.Getenv("SKIP_MIGRATIONS") == "" {
+		if err := migrateUp(dsn); err != nil {
+			log.Fatalf("migrations: %v", err)
+		}
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
