@@ -10,7 +10,8 @@ from .models import DriverRec, LapRec, RaceRec
 from .normalize import is_clean, lap_series, resample_lap
 from .openf1 import OpenF1
 
-CHUNK = timedelta(minutes=20)  # keeps every car_data/location request small
+# OpenF1 also caps requests per minute (~30), so fewer, bigger requests: ~1.7 MB each
+CHUNK = timedelta(minutes=45)
 
 
 def _ts(iso: str) -> float:
@@ -57,8 +58,12 @@ def _prefetch(api, key, drivers, start, end):
         endpoint, number, a, b = job
         api.get(endpoint, session_key=key, driver_number=number, **{"date>": _iso(a), "date<": _iso(b)})
 
-    with ThreadPoolExecutor(max_workers=8) as pool:
+    with ThreadPoolExecutor(max_workers=3) as pool:
         list(pool.map(fetch, jobs))
+
+
+def count_races(year: int, cache_dir: str) -> int:
+    return len(OpenF1(cache_dir).get("sessions", year=year, session_name="Race"))
 
 
 def load_race(year: int, round_: int, cache_dir: str) -> RaceRec:
