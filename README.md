@@ -21,7 +21,7 @@ Ingere a telemetria de **todas as voltas de uma corrida de Fórmula 1**, compara
 ```mermaid
 flowchart LR
     OF1[(OpenF1<br/>API pública)] -->|HTTP + cache em disco| ING[ingest/<br/>Python]
-    ING -->|"voltas + telemetria<br/>reamostrada a cada 5 m"| PG[(Postgres)]
+    ING -->|"voltas + telemetria<br/>reamostrada a cada 10 m"| PG[(Postgres)]
     PG --> API[api/<br/>Go · Gin · pgx · sqlc]
     API -->|JSON| WEB[web/<br/>Next.js 15 · Tailwind · shadcn/ui]
     API --- AN[internal/analysis<br/>curvas · freadas · ganhos]
@@ -29,7 +29,7 @@ flowchart LR
 
 | Pasta | Papel |
 | --- | --- |
-| `ingest/` | Baixa a sessão no OpenF1, integra a velocidade em distância, reamostra cada volta numa grade de 5 m e grava no Postgres. |
+| `ingest/` | Baixa a sessão no OpenF1, integra a velocidade em distância, reamostra cada volta numa grade de 10 m e grava no Postgres, com foto e cor da equipe de cada piloto. |
 | `api/` | Endpoints de corridas, pilotos, voltas, comparação e relatório. Migrações com golang-migrate embutidas no binário; consultas geradas com sqlc. |
 | `api/internal/analysis` | Código puro (sem I/O) que detecta zonas de frenagem e curvas e explica cada perda de tempo. |
 | `web/` | Seleção de corrida e voltas, gráficos (Recharts) e página do relatório. |
@@ -70,7 +70,7 @@ Variáveis em `.env.example`. Testes: `make test` (Go e Python); o front passa p
 
 ## Como a análise funciona
 
-- **Distância:** o OpenF1 não tem odômetro, então a distância é a integral da velocidade. Ela deriva alguns metros entre voltas, por isso cada volta é reescalada para o mesmo comprimento de pista (a mediana da corrida) antes de ir para a grade de 5 m.
+- **Distância:** o OpenF1 não tem odômetro, então a distância é a integral da velocidade. Ela deriva alguns metros entre voltas, por isso cada volta é reescalada para o mesmo comprimento de pista (a mediana da corrida) antes de ir para a grade de 10 m.
 - **Delta:** tempo acumulado de B menos A em cada ponto da grade.
 - **Curvas:** mínimos locais da velocidade suavizada, com proeminência de pelo menos 15 km/h e 100 m entre si. Cada curva vai do pico de velocidade anterior ao seguinte.
 - **Ganho:** é medido (delta no fim do trecho menos delta no início). Os 3 maiores viram o relatório.
@@ -80,14 +80,15 @@ Variáveis em `.env.example`. Testes: `make test` (Go e Python); o front passa p
 ## Decisões técnicas
 
 - **OpenF1 em vez de FastF1.** O plano era FastF1, mas a versão atual (3.9) exige login numa conta Formula 1 para baixar os dados. O OpenF1 é aberto, sem chave, e permite o "um comando" sem credenciais.
-- **Telemetria normalizada em arrays no Postgres.** Uma linha por volta com arrays `real[]` (≈1 000 pontos) em vez de uma linha por amostra: ~1 100 linhas por corrida, leitura de uma volta em uma consulta, sem particionamento. A telemetria bruta não é guardada; ela continua no cache em disco do ingest.
+- **Telemetria normalizada em arrays no Postgres.** Uma linha por volta com arrays (≈540 pontos) em vez de uma linha por amostra: ~1 100 linhas por corrida, leitura de uma volta em uma consulta, sem particionamento. Rotação, acelerador e posição são `smallint[]` e a grade é de 10 m, o que dá cerca de 18 MB por corrida e deixa uma temporada inteira dentro do banco gratuito. A telemetria bruta não é guardada; ela continua no cache em disco do ingest.
 - **Reingestão idempotente.** Rodar a mesma corrida de novo apaga e recria a corrida em uma transação.
 - **Análise em Go, pura e testada.** Fica fora dos handlers, recebe vetores e devolve structs, e é coberta por testes com voltas sintéticas.
-- **Migrações no binário da API.** O mesmo SQL serve ao Docker, ao desenvolvimento local e ao deploy.
+- **Migrações no binário da API.** O mesmo SQL serve ao Docker e ao desenvolvimento local. Em hospedagem serverless (a demo roda na Vercel com Neon) use `SKIP_MIGRATIONS=1` e aplique as migrações uma vez, porque várias partidas a frio disputariam a migração.
+- **Fotos e equipes.** As fotos dos pilotos e as cores das equipes vêm do OpenF1. Logos de equipes não existem nesses dados, então cada equipe aparece como um cartão na cor dela com os dois pilotos.
 
 ## Limitações conhecidas
 
-- **Resolução:** o OpenF1 amostra a ~3,7 Hz (um carro anda 15 a 20 m entre amostras). Pontos de frenagem e de aceleração têm incerteza dessa ordem, por isso diferenças menores que 20 m são ignoradas.
+- **Resolução:** o OpenF1 amostra a ~3,7 Hz (um carro anda 15 a 20 m entre amostras), e por isso a grade é de 10 m. Pontos de frenagem e de aceleração têm incerteza dessa ordem, e diferenças menores que 20 m são ignoradas.
 - **Dados:** o OpenF1 cobre de 2023 em diante. Voltas sem amostras completas (abandonos) ficam sem telemetria.
 - **Curvas sem nome:** as curvas são numeradas na ordem da volta, não pelos números oficiais do circuito. A primeira e a última curva incluem parte da reta de largada.
 - **Degradação de pneu:** é a inclinação bruta do tempo de volta pela idade do pneu; inclui o ganho por combustível queimado, então valores perto de zero ou negativos são normais.
