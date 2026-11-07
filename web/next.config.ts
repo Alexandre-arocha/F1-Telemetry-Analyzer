@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone", // small image for the web Dockerfile
+  // small image for the web Dockerfile; Vercel builds its own output
+  output: process.env.VERCEL ? undefined : "standalone",
 };
 
 export default nextConfig;
